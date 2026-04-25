@@ -254,12 +254,23 @@ function toast(msg) {
 }
 
 // ── AUTH ─────────────────────────────────────────────
+const provider = new firebase.auth.GoogleAuthProvider();
+provider.setCustomParameters({ prompt: 'select_account' });
+
 $('btn-login').addEventListener('click', () => {
-  auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider())
-    .catch(()=>toast('Erro ao entrar. Tente novamente.'));
+  $('ldg').classList.remove('off');
+  auth.signInWithRedirect(provider).catch(err => {
+    $('ldg').classList.add('off');
+    toast('Erro: ' + err.message);
+  });
 });
 
-auth.getRedirectResult().catch(()=>{});
+auth.getRedirectResult().then(result => {
+  if (result && result.user) console.log('Login via redirect ok');
+}).catch(err => {
+  console.error('getRedirectResult error:', err.code, err.message);
+  if (err.code !== 'auth/no-auth-event') toast('Erro login: ' + err.message);
+});
 
 auth.onAuthStateChanged(user => {
   $('ldg').classList.add('off');
